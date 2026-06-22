@@ -1,73 +1,103 @@
-# React + TypeScript + Vite
+# Chess.com Streamers
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicação web que consome a [API pública de streamers do Chess.com](https://api.chess.com/pub/streamers) e exibe uma lista de streamers com avatar, nome, link para o Twitch e indicador visual de transmissão ao vivo.
 
-Currently, two official plugins are available:
+## Funcionalidades
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Listagem de todos os streamers retornados pela API em cards
+- Indicador de live (bolinha vermelha) ao lado do nome quando o streamer está transmitindo
+- Estados de feedback: loading durante o carregamento e empty state em caso de erro ou lista vazia
+- Links para o Twitch que abrem em nova aba
+- Tema visual verde-claro com cards arredondados e sombra sutil
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- [Vite](https://vite.dev/)
+- [React 19](https://react.dev/)
+- TypeScript
+- CSS por componente (sem bibliotecas de UI)
 
-## Expanding the ESLint configuration
+## Pré-requisitos
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js 18+
+- npm
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Como executar
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+```bash
+# Instalar dependências
+npm install
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Servidor de desenvolvimento
+npm run dev
+
+# Build de produção
+npm run build
+
+# Preview do build
+npm run preview
+
+# Lint
+npm run lint
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Após `npm run dev`, abra a URL exibida no terminal (geralmente `http://localhost:5173`). A API é consultada automaticamente ao carregar a página.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Estrutura do projeto
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+├── types/
+│   └── streamer.ts          # Tipos da resposta da API
+├── components/
+│   ├── StreamerList/        # Grid/lista de cards
+│   ├── StreamerCard/        # Card individual (avatar, nome, live, Twitch)
+│   ├── Loading/             # Feedback de carregamento
+│   └── EmptyState/          # Mensagens de erro ou lista vazia
+├── App.tsx                  # Fetch da API e renderização condicional
+├── App.css                  # Layout da página e tema global
+├── main.tsx
+└── index.css                # Reset/base global
+```
+
+## Arquitetura
+
+| Componente    | Responsabilidade |
+|---------------|------------------|
+| `App`         | Fetch da API via `useEffect`; estados `loading`, `error` e `streamers`; renderização condicional |
+| `StreamerList`| Recebe `Streamer[]` e renderiza a lista de `StreamerCard` |
+| `StreamerCard`| Exibe avatar, username, link Twitch e indicador live |
+| `Loading`     | Feedback visual enquanto os dados carregam |
+| `EmptyState`  | Mensagem quando não há streamers ou ocorreu erro |
+
+### Fluxo de estados
+
+```
+Montagem do App → loading
+       ↓
+   fetch API ──┬── sucesso + dados → StreamerList
+               ├── sucesso + vazio → EmptyState (vazio)
+               └── erro            → EmptyState (erro)
+```
+
+## API
+
+**Endpoint:** `GET https://api.chess.com/pub/streamers`
+
+Sem autenticação. A resposta contém um array `streamers` com objetos que incluem `username`, `avatar`, `twitch_url`, `url` e `is_live`.
+
+Documentação da API: [Chess.com Streamers API](https://api.chess.com/pub/streamers)
+
+## Fora de escopo (v1)
+
+- Filtros, busca ou ordenação
+- Paginação
+- Autenticação
+- Refresh automático / polling
+- Bibliotecas de UI (Material, Tailwind, etc.)
+- State management externo (Redux, Zustand, etc.)
+
+## Referências
+
+- PRD do projeto: [.docs/prd.md](.docs/prd.md)
+- Brain dump original: [.docs/brain-dump.md](.docs/brain-dump.md)
